@@ -1,14 +1,54 @@
-import { Container, Heading } from "@chakra-ui/react";
+import { Button, Container, Heading } from "@chakra-ui/react";
+import { getData, SERVER } from "@common/server";
 import { Navbar } from "@layout/Navbar";
+import { AsyncSelect } from "chakra-react-select";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useRef, useState } from "react";
 
 function Home() {
   const { data } = useSession();
+  const searchRef = useRef(null);
+  const [selectedArtist, setSelectedArtist] = useState();
+
+  const onArtistSelect = ({ value: artistId, label: artistName }) => {
+    setSelectedArtist({ artistId, artistName });
+  };
+
   return (
     <>
       <Navbar user={data?.user} signIn={signIn} signOut={signOut} />
       <Container pt={10}>
-        <Heading as="h1">Guacho se viene con todo pa&apos;s</Heading>
+        <Heading as="h1">Select your artist to start playing</Heading>
+        <AsyncSelect
+          onChange={onArtistSelect}
+          placeholder="Search your favorite artist"
+          size="md"
+          loadOptions={(inputValue, callback) => {
+            if (searchRef.current) {
+              clearTimeout(searchRef.current);
+            }
+
+            /* Added code for debounce multiple requests */
+            searchRef.current = setTimeout(async () => {
+              const { data: artistsList } = await getData(
+                SERVER.SEARCH_ARTISTS,
+                {
+                  params: { artistName: inputValue },
+                }
+              );
+
+              const values = artistsList.map(({ id, name }) => ({
+                value: id,
+                label: name,
+              }));
+
+              searchRef.current = null;
+              callback(values);
+            }, 1000);
+          }}
+        />
+
+        <Button disabled={!selectedArtist}>Create Game</Button>
       </Container>
     </>
   );
