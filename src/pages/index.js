@@ -10,17 +10,14 @@ function Home() {
   const searchRef = useRef(null);
   const [selectedArtist, setSelectedArtist] = useState();
 
-  const onArtistSelect = ({ value: artistId, label: artistName }) => {
-    setSelectedArtist({ artistId, artistName });
-  };
-
   return (
     <>
       <Navbar user={data?.user} signIn={signIn} signOut={signOut} />
       <Container pt={10}>
         <Heading as="h1">Select your artist to start playing</Heading>
         <AsyncSelect
-          onChange={onArtistSelect}
+          isClearable
+          onChange={setSelectedArtist}
           placeholder="Search your favorite artist"
           size="md"
           loadOptions={(inputValue, callback) => {
@@ -37,9 +34,10 @@ function Home() {
                 }
               );
 
-              const values = artistsList.map(({ id, name }) => ({
-                value: id,
-                label: name,
+              const values = artistsList.map((artist) => ({
+                value: artist.id,
+                label: artist.name,
+                ...artist,
               }));
 
               searchRef.current = null;
