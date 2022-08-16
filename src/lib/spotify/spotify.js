@@ -25,38 +25,43 @@ export const refreshAccessToken = async (refresh_token) => {
   return data?.access_token;
 };
 
-export const searchArtistsByName = async (refreshToken, artistName) => {
+export const searchPlaylistsByName = async (refreshToken, name) => {
   if (!refreshToken) return [];
   const accessToken = await refreshAccessToken(refreshToken);
-  const { data } = await getData(SERVER.SPOTIFY_ARTIST_SEARCH(artistName), {
+  const { data } = await getData(SERVER.SPOTIFY_PLAYLIST_SEARCH(name), {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
-  return data?.artists.items || [];
+  return data?.playlists.items || [];
 };
 
-export const getArtistTopSongs = async (refreshToken, artistId) => {
+export const getSpecificPlaylist = async (refreshToken, playlistId) => {
   if (!refreshToken) return [];
   const accessToken = await refreshAccessToken(refreshToken);
-  const { data } = await getData(SERVER.SPOTIFY_ARTIST_TOP_SONGS(artistId), {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  return data?.tracks || [];
+  const { data: playlist } = await getData(
+    SERVER.SPOTIFY_PLAYLIST(playlistId),
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  return playlist;
 };
 
-export const getArtist = async (refreshToken, artistId) => {
+export const getTracks = async (refreshToken, playlistId, offset = 0) => {
   if (!refreshToken) return [];
   const accessToken = await refreshAccessToken(refreshToken);
-  const { data } = await getData(SERVER.SPOTIFY_GET_ARTIST(artistId), {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const { data } = await getData(
+    SERVER.SPOTIFY_PLAYLIST_TRACKS(playlistId) + `?offset=${offset}&limit=10`, // added limit because of game scope
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 
-  return data;
+  return data?.items || [];
 };
