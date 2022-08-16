@@ -37,17 +37,26 @@ export const searchArtistsByName = async (refreshToken, artistName) => {
   return data?.artists.items || [];
 };
 
-// export const getTracks = async (refreshToken, playlistId, offset = 0) => {
-//   if (!refreshToken) return [];
-//   const accessToken = await refreshAccessToken(refreshToken);
-//   const { data } = await getData(
-//     SERVER.SPOTIFY_PLAYLIST_TRACKS(playlistId) + `?offset=${offset}`,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${accessToken}`,
-//       },
-//     }
-//   );
+export const getArtistTopSongs = async (refreshToken, artistId) => {
+  if (!refreshToken) return [];
+  const accessToken = await refreshAccessToken(refreshToken);
+  const { data } = await getData(SERVER.SPOTIFY_ARTIST_TOP_SONGS(artistId), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
-//   return data?.items || [];
-// };
+  return data?.tracks || [];
+};
+
+export const getArtist = async (refreshToken, artistId) => {
+  if (!refreshToken) return [];
+  const accessToken = await refreshAccessToken(refreshToken);
+  const { data } = await getData(SERVER.SPOTIFY_GET_ARTIST(artistId), {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return data;
+};
