@@ -55,7 +55,7 @@ export const getTracks = async (refreshToken, playlistId, offset = 0) => {
   if (!refreshToken) return [];
   const accessToken = await refreshAccessToken(refreshToken);
   const { data } = await getData(
-    SERVER.SPOTIFY_PLAYLIST_TRACKS(playlistId) + `?offset=${offset}&limit=10`, // added limit because of game scope
+    SERVER.SPOTIFY_PLAYLIST_TRACKS(playlistId) + `?offset=${offset}`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
