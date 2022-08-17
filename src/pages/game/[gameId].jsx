@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getSession } from "next-auth/react";
 import { getSpecificPlaylist, getTracks } from "@lib/spotify";
-import { Button, Container, Heading, Text } from "@chakra-ui/react";
+import { Button, Container, Heading, SimpleGrid, Text } from "@chakra-ui/react";
+import { GameCard } from "@components/GameCard";
 
 const SONGS_LIMIT = 10;
 const getRandomSong = (tracks, obj) => {
@@ -19,8 +20,9 @@ export default function Game({ playlist, tracks }) {
   const audioRef = useRef();
   const [playing, setPlaying] = useState(false);
   const [gameSongs, setGameSongs] = useState([]);
-  const [currentSong, setCurrentSong] = useState(0);
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [repeatedSongs, setRepeatedSongs] = useState({});
+  const [selectedSong, setSelectedSong] = useState(null);
   const [currentOptions, setCurrentOptions] = useState([]);
 
   useEffect(() => {
@@ -39,7 +41,10 @@ export default function Game({ playlist, tracks }) {
 
   const startGame = () => {
     if (!playing) setPlaying(true);
-    else setCurrentSong((prevSong) => prevSong + 1);
+    else {
+      setCurrentSongIndex((prevSong) => prevSong + 1);
+      setSelectedSong(null);
+    }
   };
 
   const getSongOptions = (currentTrack) => {
@@ -60,13 +65,13 @@ export default function Game({ playlist, tracks }) {
   };
 
   useEffect(() => {
-    if (playing && gameSongs[currentSong]) {
+    if (playing && gameSongs[currentSongIndex]) {
       if (audioRef.current) audioRef.current.pause();
-      audioRef.current = new Audio(gameSongs[currentSong].preview_url);
+      audioRef.current = new Audio(gameSongs[currentSongIndex].preview_url);
       audioRef.current.play();
-      getSongOptions(gameSongs[currentSong]);
+      getSongOptions(gameSongs[currentSongIndex]);
     }
-  }, [playing, currentSong]);
+  }, [playing, currentSongIndex]);
 
   if (!playlist || !tracks) {
     return <Text>Something went wrong. Please try again later.</Text>;
@@ -75,10 +80,23 @@ export default function Game({ playlist, tracks }) {
   return (
     <Container>
       <Heading as="h2">{playlist.name}</Heading>
-      {playing &&
-        currentOptions.map((option) => (
-          <Button key={option.id}>{option.name}</Button>
-        ))}
+      {playing && (
+        <SimpleGrid columns={2} spacing={2}>
+          {currentOptions.map((option) => (
+            <GameCard
+              key={option.id}
+              isSelected={
+                selectedSong
+                  ? option.id === gameSongs[currentSongIndex].id
+                  : undefined
+              }
+              onSelect={() => setSelectedSong(option)}
+            >
+              {option.name}
+            </GameCard>
+          ))}
+        </SimpleGrid>
+      )}
       <Button disabled={!gameSongs} onClick={startGame}>
         {playing ? "Next" : "Start Game"}
       </Button>
