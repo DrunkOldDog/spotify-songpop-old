@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Center } from "@chakra-ui/react";
+import { Center, Text } from "@chakra-ui/react";
 
 export const GameCard = ({ children, isSelected, onSelect }) => {
   return (
@@ -17,12 +17,15 @@ export const GameCard = ({ children, isSelected, onSelect }) => {
             : "red.500"
           : "gray.700"
       }
+      textAlign="center"
+      userSelect={"none"}
+      p={4}
       _hover={
         isSelected === undefined ? { backgroundColor: "gray.800" } : undefined
       }
       onClick={onSelect}
     >
-      {children}
+      <Text noOfLines={2}>{children}</Text>
     </Center>
   );
 };

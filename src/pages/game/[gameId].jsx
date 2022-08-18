@@ -131,7 +131,7 @@ export default function Game({ playlist, tracks }) {
 
   return (
     <Container background="blackAlpha.900" color="#fff">
-      <Center flexDir={"column"} height="100vh">
+      <Center flexDir={"column"} height="100vh" px={12}>
         <Heading as="h1" mb={8}>
           Start a new game:
         </Heading>
@@ -149,7 +149,7 @@ export default function Game({ playlist, tracks }) {
         </Text>
 
         {gameStatus === GAME_STATUS.STARTED && (
-          <SimpleGrid columns={2} spacing={2} mb={8}>
+          <SimpleGrid columns={2} spacing={2} mb={8} width="100%">
             {currentOptions.map((option) => (
               <GameCard
                 key={option.id}
@@ -158,7 +158,7 @@ export default function Game({ playlist, tracks }) {
                     ? option.id === gameSongs[currentSongIndex].id
                     : undefined
                 }
-                onSelect={() => onSongSelect(option)}
+                onSelect={() => !selectedSong && onSongSelect(option)}
               >
                 {option.name}
               </GameCard>
