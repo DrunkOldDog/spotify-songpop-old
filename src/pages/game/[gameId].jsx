@@ -2,13 +2,30 @@ import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getSession } from "next-auth/react";
 import { getSpecificPlaylist, getTracks } from "@lib/spotify";
-import { Button, Container, Heading, SimpleGrid, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Center,
+  Container,
+  Heading,
+  Image,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import { GameCard } from "@components/GameCard";
+import { GlobalPropTypes } from "@common/constants";
+
+const GAME_STATUS = {
+  NOT_STARTED: "NOT_STARTED",
+  STARTED: "STARTED",
+  FINISHED: "FINISHED",
+};
 
 const SONGS_LIMIT = 10;
 const getRandomSong = (tracks, obj) => {
-  const randomIndex = Math.floor(Math.random() * (tracks.length + 1));
+  const randomIndex = Math.floor(Math.random() * tracks.length);
   const track = tracks[randomIndex];
+  console.debug({ randomIndex, track, tracks });
   if (obj[track.id]) {
     return getRandomSong(tracks, obj);
   }
@@ -18,12 +35,13 @@ const getRandomSong = (tracks, obj) => {
 
 export default function Game({ playlist, tracks }) {
   const audioRef = useRef();
-  const [playing, setPlaying] = useState(false);
+  const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
   const [gameSongs, setGameSongs] = useState([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [repeatedSongs, setRepeatedSongs] = useState({});
   const [selectedSong, setSelectedSong] = useState(null);
   const [currentOptions, setCurrentOptions] = useState([]);
+  const [score, setScore] = useState(0);
 
   useEffect(() => {
     if (tracks.length) {
@@ -39,12 +57,22 @@ export default function Game({ playlist, tracks }) {
     }
   }, [tracks]);
 
-  const startGame = () => {
-    if (!playing) setPlaying(true);
-    else {
+  const onBtnClick = () => {
+    if (gameStatus === GAME_STATUS.NOT_STARTED) {
+      setGameStatus(GAME_STATUS.STARTED);
+    } else if (currentSongIndex < gameSongs.length - 1) {
       setCurrentSongIndex((prevSong) => prevSong + 1);
       setSelectedSong(null);
+    } else {
+      setGameStatus(GAME_STATUS.FINISHED);
     }
+  };
+
+  const onSongSelect = (song) => {
+    if (song.id === gameSongs[currentSongIndex].id) {
+      setScore((prevScore) => prevScore + 1);
+    }
+    setSelectedSong(song);
   };
 
   const getSongOptions = (currentTrack) => {
@@ -65,41 +93,82 @@ export default function Game({ playlist, tracks }) {
   };
 
   useEffect(() => {
-    if (playing && gameSongs[currentSongIndex]) {
+    if (gameStatus === GAME_STATUS.STARTED && gameSongs[currentSongIndex]) {
       if (audioRef.current) audioRef.current.pause();
       audioRef.current = new Audio(gameSongs[currentSongIndex].preview_url);
       audioRef.current.play();
       getSongOptions(gameSongs[currentSongIndex]);
     }
-  }, [playing, currentSongIndex]);
+  }, [gameStatus, currentSongIndex]);
 
   if (!playlist || !tracks) {
     return <Text>Something went wrong. Please try again later.</Text>;
   }
 
+  if (gameStatus === GAME_STATUS.FINISHED) {
+    return (
+      <Container background="blackAlpha.900" color="#fff">
+        <Center flexDir={"column"} height="100vh">
+          <Image
+            src={playlist.images[0].url}
+            height={[40, 48, 56, 56]}
+            mb={4}
+          />
+          <Box mb={8} maxW={360} textAlign="center">
+            <Heading as="h2" size={"lg"}>
+              {playlist.name}
+            </Heading>
+            <Text>{playlist.description}</Text>
+          </Box>
+
+          <Heading as="h4" fontSize={"md"}>
+            Game ended: {score} points/{SONGS_LIMIT} songs
+          </Heading>
+        </Center>
+      </Container>
+    );
+  }
+
   return (
-    <Container>
-      <Heading as="h2">{playlist.name}</Heading>
-      {playing && (
-        <SimpleGrid columns={2} spacing={2}>
-          {currentOptions.map((option) => (
-            <GameCard
-              key={option.id}
-              isSelected={
-                selectedSong
-                  ? option.id === gameSongs[currentSongIndex].id
-                  : undefined
-              }
-              onSelect={() => setSelectedSong(option)}
-            >
-              {option.name}
-            </GameCard>
-          ))}
-        </SimpleGrid>
-      )}
-      <Button disabled={!gameSongs} onClick={startGame}>
-        {playing ? "Next" : "Start Game"}
-      </Button>
+    <Container background="blackAlpha.900" color="#fff">
+      <Center flexDir={"column"} height="100vh">
+        <Heading as="h1" mb={8}>
+          Start a new game:
+        </Heading>
+        <Image src={playlist.images[0].url} height={[40, 48, 56, 56]} mb={4} />
+
+        <Box mb={8} maxW={360} textAlign="center">
+          <Heading as="h2" size={"lg"}>
+            {playlist.name}
+          </Heading>
+          <Text>{playlist.description}</Text>
+        </Box>
+
+        <Text>
+          Score {score}/{SONGS_LIMIT}
+        </Text>
+
+        {gameStatus === GAME_STATUS.STARTED && (
+          <SimpleGrid columns={2} spacing={2} mb={8}>
+            {currentOptions.map((option) => (
+              <GameCard
+                key={option.id}
+                isSelected={
+                  selectedSong
+                    ? option.id === gameSongs[currentSongIndex].id
+                    : undefined
+                }
+                onSelect={() => onSongSelect(option)}
+              >
+                {option.name}
+              </GameCard>
+            ))}
+          </SimpleGrid>
+        )}
+        <Button disabled={!gameSongs} onClick={onBtnClick} size="lg">
+          {gameStatus === GAME_STATUS.STARTED ? "Next" : "Start Game"}
+        </Button>
+      </Center>
     </Container>
   );
 }
@@ -128,6 +197,6 @@ export async function getServerSideProps(context) {
 }
 
 Game.propTypes = {
-  playlist: PropTypes.any,
-  tracks: PropTypes.any,
+  playlist: GlobalPropTypes.playlist.isRequired,
+  tracks: PropTypes.arrayOf(GlobalPropTypes.track).isRequired,
 };
