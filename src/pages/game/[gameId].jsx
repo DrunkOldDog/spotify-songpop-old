@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { getSpecificPlaylist, getTracks } from "@lib/spotify";
 import {
   Box,
@@ -9,6 +9,8 @@ import {
   Container,
   Heading,
   Image,
+  List,
+  ListItem,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
@@ -35,6 +37,7 @@ const getRandomSong = (tracks, obj) => {
 
 export default function Game({ playlist, tracks }) {
   const audioRef = useRef();
+  const { data: session } = useSession();
   const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
   const [gameSongs, setGameSongs] = useState([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
@@ -121,9 +124,31 @@ export default function Game({ playlist, tracks }) {
             <Text>{playlist.description}</Text>
           </Box>
 
-          <Heading as="h4" fontSize={"md"}>
-            Game ended: {score} points/{SONGS_LIMIT} songs
+          <Heading as="h4" fontSize={"lg"}>
+            Game score:
           </Heading>
+          <List
+            width="100%"
+            borderWidth={2}
+            borderRadius={"lg"}
+            overflow="hidden"
+          >
+            <ListItem
+              display={"flex"}
+              justifyContent="space-between"
+              background="gray.800"
+              px={8}
+              py={4}
+              fontWeight="bold"
+            >
+              <Box display={"flex"} gap={4}>
+                <Text>1.</Text>
+                <Text>{session.user?.name}</Text>
+              </Box>
+
+              <Text>{score}</Text>
+            </ListItem>
+          </List>
         </Center>
       </Container>
     );
