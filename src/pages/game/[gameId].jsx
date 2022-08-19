@@ -9,12 +9,11 @@ import {
   Container,
   Heading,
   Image,
-  SimpleGrid,
   Text,
 } from "@chakra-ui/react";
-import { GameCard } from "@components/GameCard";
 import { GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
+import { SongOptions } from "@components/SongOptions";
 
 const GAME_STATUS = {
   NOT_STARTED: "NOT_STARTED",
@@ -152,21 +151,12 @@ export default function Game({ playlist, tracks }) {
         </Text>
 
         {gameStatus === GAME_STATUS.STARTED && (
-          <SimpleGrid columns={2} spacing={2} mb={8} width="100%">
-            {currentOptions.map((option) => (
-              <GameCard
-                key={option.id}
-                isSelected={
-                  selectedSong
-                    ? option.id === gameSongs[currentSongIndex].id
-                    : undefined
-                }
-                onSelect={() => !selectedSong && onSongSelect(option)}
-              >
-                {option.name}
-              </GameCard>
-            ))}
-          </SimpleGrid>
+          <SongOptions
+            songOptions={currentOptions}
+            isSongSelected={!!selectedSong}
+            currentSong={gameSongs[currentSongIndex]}
+            onSongSelect={onSongSelect}
+          />
         )}
         <Button disabled={!gameSongs} onClick={onBtnClick} size="lg">
           {gameStatus === GAME_STATUS.STARTED ? "Next" : "Start Game"}
