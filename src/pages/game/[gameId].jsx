@@ -14,6 +14,7 @@ import {
 import { GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
 import { SongOptions } from "@components/SongOptions";
+import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
 
 const GAME_STATUS = {
   NOT_STARTED: "NOT_STARTED",
@@ -21,42 +22,15 @@ const GAME_STATUS = {
   FINISHED: "FINISHED",
 };
 
-const SONGS_LIMIT = 10;
-const getRandomSong = (tracks, obj) => {
-  const randomIndex = Math.floor(Math.random() * tracks.length);
-  const track = tracks[randomIndex];
-  console.debug({ randomIndex, track, tracks });
-  if (obj[track.id]) {
-    return getRandomSong(tracks, obj);
-  }
-  obj[track.id] = true;
-  return track;
-};
-
 export default function Game({ playlist, tracks }) {
   const audioRef = useRef();
+  const { gameSongs, currentSongOptions, getSongOptions } =
+    useCreateGame(tracks);
   const { data: session } = useSession();
   const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
-  const [gameSongs, setGameSongs] = useState([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [repeatedSongs, setRepeatedSongs] = useState({});
   const [selectedSong, setSelectedSong] = useState(null);
-  const [currentOptions, setCurrentOptions] = useState([]);
   const [score, setScore] = useState(0);
-
-  useEffect(() => {
-    if (tracks.length) {
-      const randomSongs = [],
-        songsObj = {};
-      const songsScope =
-        SONGS_LIMIT < tracks.length ? SONGS_LIMIT : tracks.length;
-      for (let i = 0; i < songsScope; i++) {
-        randomSongs[i] = getRandomSong(tracks, songsObj);
-      }
-
-      setGameSongs(randomSongs);
-    }
-  }, [tracks]);
 
   const onBtnClick = () => {
     if (gameStatus === GAME_STATUS.NOT_STARTED) {
@@ -74,23 +48,6 @@ export default function Game({ playlist, tracks }) {
       setScore((prevScore) => prevScore + 1);
     }
     setSelectedSong(song);
-  };
-
-  const getSongOptions = (currentTrack) => {
-    const currentTrackPos = Math.floor(Math.random() * 4);
-    const options = [];
-    const currentIds = { ...repeatedSongs, [currentTrack.id]: true };
-    for (let i = 0; i < 4; i++) {
-      if (currentTrackPos === i) {
-        options[i] = currentTrack;
-      } else {
-        const randomSong = getRandomSong(tracks, currentIds);
-        options[i] = randomSong;
-      }
-    }
-
-    setRepeatedSongs(currentIds);
-    setCurrentOptions(options);
   };
 
   useEffect(() => {
@@ -152,7 +109,7 @@ export default function Game({ playlist, tracks }) {
 
         {gameStatus === GAME_STATUS.STARTED && (
           <SongOptions
-            songOptions={currentOptions}
+            songOptions={currentSongOptions}
             isSongSelected={!!selectedSong}
             currentSong={gameSongs[currentSongIndex]}
             onSongSelect={onSongSelect}
