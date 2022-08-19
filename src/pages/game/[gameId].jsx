@@ -9,13 +9,12 @@ import {
   Container,
   Heading,
   Image,
-  List,
-  ListItem,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
 import { GameCard } from "@components/GameCard";
 import { GlobalPropTypes } from "@common/constants";
+import { ScoreList } from "@components/ScoreList";
 
 const GAME_STATUS = {
   NOT_STARTED: "NOT_STARTED",
@@ -127,28 +126,7 @@ export default function Game({ playlist, tracks }) {
           <Heading as="h4" fontSize={"lg"}>
             Game score:
           </Heading>
-          <List
-            width="100%"
-            borderWidth={2}
-            borderRadius={"lg"}
-            overflow="hidden"
-          >
-            <ListItem
-              display={"flex"}
-              justifyContent="space-between"
-              background="gray.800"
-              px={8}
-              py={4}
-              fontWeight="bold"
-            >
-              <Box display={"flex"} gap={4}>
-                <Text>1.</Text>
-                <Text>{session.user?.name}</Text>
-              </Box>
-
-              <Text>{score}</Text>
-            </ListItem>
-          </List>
+          <ScoreList playersScore={[{ name: session.user.name, score }]} />
         </Center>
       </Container>
     );
