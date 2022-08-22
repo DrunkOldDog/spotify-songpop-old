@@ -15,6 +15,8 @@ import { GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
 import { SongOptions } from "@components/SongOptions";
 import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
+import { SERVER } from "@common/server";
+import io from "socket.io-client";
 
 const GAME_STATUS = {
   NOT_STARTED: "NOT_STARTED",
@@ -24,6 +26,7 @@ const GAME_STATUS = {
 
 export default function Game({ playlist, tracks }) {
   const audioRef = useRef();
+  const socketRef = useRef();
   const { gameSongs, currentSongOptions, getSongOptions } =
     useCreateGame(tracks);
   const { data: session } = useSession();
@@ -31,6 +34,36 @@ export default function Game({ playlist, tracks }) {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [selectedSong, setSelectedSong] = useState(null);
   const [score, setScore] = useState(0);
+  const [usersList, setUsersList] = useState([]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const userJoin = (msg) => {
+      setUsersList((prevUsers) => [
+        ...prevUsers,
+        { id: msg.id, userName: msg.userName, score: 0 },
+      ]);
+    };
+
+    (async () => {
+      await fetch(SERVER.SOCKET);
+      socketRef.current = io();
+      socketRef.current.on("userJoin", userJoin);
+
+      /* Add user to the socket */
+      socketRef.current.emit("addUserToGame", {
+        id: session.user.id,
+        userName: session.user.name,
+      });
+    })();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off("userJoin", userJoin);
+      }
+    };
+  }, [session]);
 
   const onBtnClick = () => {
     if (gameStatus === GAME_STATUS.NOT_STARTED) {
@@ -103,9 +136,17 @@ export default function Game({ playlist, tracks }) {
           <Text>{playlist.description}</Text>
         </Box>
 
-        <Text>
-          Score {score}/{SONGS_LIMIT}
-        </Text>
+        {gameStatus === GAME_STATUS.NOT_STARTED ? (
+          <>
+            {usersList.map((user) => (
+              <Text key={user.id}>{user.userName}</Text>
+            ))}
+          </>
+        ) : (
+          <Text>
+            Score {score}/{SONGS_LIMIT}
+          </Text>
+        )}
 
         {gameStatus === GAME_STATUS.STARTED && (
           <SongOptions

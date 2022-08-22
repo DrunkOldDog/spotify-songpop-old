@@ -1,7 +1,5 @@
 export const messageHandler = (_, socket) => {
-  const createdMessage = (msg) => {
-    socket.broadcast.emit("newIncomingMessage", msg);
-  };
+  const addUserToGame = (msg) => socket.broadcast.emit("userJoin", msg);
 
-  socket.on("createdMessage", createdMessage);
+  socket.on("addUserToGame", addUserToGame);
 };
