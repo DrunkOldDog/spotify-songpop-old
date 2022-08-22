@@ -1,193 +1,37 @@
 import { useState, useRef, useEffect } from "react";
-import PropTypes from "prop-types";
-import { getSession, useSession } from "next-auth/react";
-import { getSpecificPlaylist, getTracks } from "@lib/spotify";
-import {
-  Box,
-  Button,
-  Center,
-  Container,
-  Heading,
-  Image,
-  Text,
-} from "@chakra-ui/react";
-import { GlobalPropTypes } from "@common/constants";
-import { ScoreList } from "@components/ScoreList";
-import { SongOptions } from "@components/SongOptions";
-import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
-import { SERVER } from "@common/server";
+import { Button, Container, Heading, Input } from "@chakra-ui/react";
+import { v4 as uuid } from "uuid";
+import { SOCKET_SERVER_MESSAGES } from "@common/sockets";
 import io from "socket.io-client";
+import { SERVER } from "@common/server";
 
-const GAME_STATUS = {
-  NOT_STARTED: "NOT_STARTED",
-  STARTED: "STARTED",
-  FINISHED: "FINISHED",
-};
-
-export default function Game({ playlist, tracks }) {
-  const audioRef = useRef();
+export default function Game() {
   const socketRef = useRef();
-  const { gameSongs, currentSongOptions, getSongOptions } =
-    useCreateGame(tracks);
-  const { data: session } = useSession();
-  const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
-  const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [selectedSong, setSelectedSong] = useState(null);
-  const [score, setScore] = useState(0);
-  const [usersList, setUsersList] = useState([]);
+  const userInputRef = useRef();
+  const [user, setUser] = useState();
 
   useEffect(() => {
-    if (!session) return;
-
-    const userJoin = (msg) => {
-      setUsersList((prevUsers) => [
-        ...prevUsers,
-        { id: msg.id, userName: msg.userName, score: 0 },
-      ]);
-    };
-
     (async () => {
       await fetch(SERVER.SOCKET);
       socketRef.current = io();
-      socketRef.current.on("userJoin", userJoin);
-
-      /* Add user to the socket */
-      socketRef.current.emit("addUserToGame", {
-        id: session.user.id,
-        userName: session.user.name,
-      });
     })();
+  }, []);
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off("userJoin", userJoin);
-      }
-    };
-  }, [session]);
-
-  const onBtnClick = () => {
-    if (gameStatus === GAME_STATUS.NOT_STARTED) {
-      setGameStatus(GAME_STATUS.STARTED);
-    } else if (currentSongIndex < gameSongs.length - 1) {
-      setCurrentSongIndex((prevSong) => prevSong + 1);
-      setSelectedSong(null);
-    } else {
-      setGameStatus(GAME_STATUS.FINISHED);
-    }
+  const createUser = () => {
+    const newUser = { id: uuid(), userName: userInputRef.current.value };
+    setUser(newUser);
+    socketRef.current.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, newUser);
   };
 
-  const onSongSelect = (song) => {
-    if (song.id === gameSongs[currentSongIndex].id) {
-      setScore((prevScore) => prevScore + 1);
-    }
-    setSelectedSong(song);
-  };
-
-  useEffect(() => {
-    if (gameStatus === GAME_STATUS.STARTED && gameSongs[currentSongIndex]) {
-      if (audioRef.current) audioRef.current.pause();
-      audioRef.current = new Audio(gameSongs[currentSongIndex].preview_url);
-      audioRef.current.play();
-      getSongOptions(gameSongs[currentSongIndex]);
-    }
-  }, [gameStatus, currentSongIndex]);
-
-  if (!playlist || !tracks) {
-    return <Text>Something went wrong. Please try again later.</Text>;
-  }
-
-  if (gameStatus === GAME_STATUS.FINISHED) {
+  if (!user) {
     return (
-      <Container background="blackAlpha.900" color="#fff">
-        <Center flexDir={"column"} height="100vh">
-          <Image
-            src={playlist.images[0].url}
-            height={[40, 48, 56, 56]}
-            mb={4}
-          />
-          <Box mb={8} maxW={360} textAlign="center">
-            <Heading as="h2" size={"lg"}>
-              {playlist.name}
-            </Heading>
-            <Text>{playlist.description}</Text>
-          </Box>
-
-          <Heading as="h4" fontSize={"lg"}>
-            Game score:
-          </Heading>
-          <ScoreList playersScore={[{ name: session.user.name, score }]} />
-        </Center>
+      <Container>
+        <Heading as="h2">Add a username to start </Heading>
+        <Input ref={userInputRef} />
+        <Button onClick={createUser}>Create User</Button>
       </Container>
     );
   }
 
-  return (
-    <Container background="blackAlpha.900" color="#fff">
-      <Center flexDir={"column"} height="100vh" px={12}>
-        <Heading as="h1" mb={8}>
-          Start a new game:
-        </Heading>
-        <Image src={playlist.images[0].url} height={[40, 48, 56, 56]} mb={4} />
-
-        <Box mb={8} maxW={360} textAlign="center">
-          <Heading as="h2" size={"lg"}>
-            {playlist.name}
-          </Heading>
-          <Text>{playlist.description}</Text>
-        </Box>
-
-        {gameStatus === GAME_STATUS.NOT_STARTED ? (
-          <>
-            {usersList.map((user) => (
-              <Text key={user.id}>{user.userName}</Text>
-            ))}
-          </>
-        ) : (
-          <Text>
-            Score {score}/{SONGS_LIMIT}
-          </Text>
-        )}
-
-        {gameStatus === GAME_STATUS.STARTED && (
-          <SongOptions
-            songOptions={currentSongOptions}
-            isSongSelected={!!selectedSong}
-            currentSong={gameSongs[currentSongIndex]}
-            onSongSelect={onSongSelect}
-          />
-        )}
-        <Button disabled={!gameSongs} onClick={onBtnClick} size="lg">
-          {gameStatus === GAME_STATUS.STARTED ? "Next" : "Start Game"}
-        </Button>
-      </Center>
-    </Container>
-  );
+  return <h1>Hey!</h1>;
 }
-
-export async function getServerSideProps(context) {
-  const { playlistId } = context.query;
-  const session = await getSession({ req: context.req });
-
-  const playlist = await getSpecificPlaylist(session?.refreshToken, playlistId);
-  /* Add validation to at least play with 40 songs */
-  const tracksTotal = playlist.tracks.total - 40;
-  const tracksOffset =
-    playlist.tracks.total > 40
-      ? Math.floor(Math.random() * (tracksTotal + 1))
-      : 0;
-
-  const tracks = await getTracks(
-    session?.refreshToken,
-    playlistId,
-    tracksOffset
-  );
-
-  return {
-    props: { playlist, tracks: tracks.map(({ track }) => track) },
-  };
-}
-
-Game.propTypes = {
-  playlist: GlobalPropTypes.playlist.isRequired,
-  tracks: PropTypes.arrayOf(GlobalPropTypes.track).isRequired,
-};

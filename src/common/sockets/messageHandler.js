@@ -1,5 +1,9 @@
-export const messageHandler = (_, socket) => {
-  const addUserToGame = (msg) => socket.broadcast.emit("userJoin", msg);
+import { SOCKET_SERVER_MESSAGES, SOCKET_CLIENT_MESSAGES } from "./messages";
 
-  socket.on("addUserToGame", addUserToGame);
+export const messageHandler = (_, socket) => {
+  const addUserToGame = (msg) => {
+    socket.broadcast.emit(SOCKET_CLIENT_MESSAGES.USER_JOIN, msg);
+  };
+
+  socket.on(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, addUserToGame);
 };

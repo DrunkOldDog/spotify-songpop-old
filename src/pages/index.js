@@ -17,7 +17,7 @@ function Home() {
     if (!playlistId) {
       return;
     }
-    push(`/game/${gameId}?playlistId=${playlistId}`);
+    push(`/game/create/${gameId}?playlistId=${playlistId}`);
   };
 
   return (
