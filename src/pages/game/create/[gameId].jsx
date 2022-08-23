@@ -17,13 +17,15 @@ import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
 import { SongOptions } from "@components/SongOptions";
 import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
-import { SERVER } from "@common/server";
-import io from "socket.io-client";
-import { SOCKET_CLIENT_MESSAGES } from "@common/sockets";
+import {
+  SOCKET_CLIENT_MESSAGES,
+  SOCKET_SERVER_MESSAGES,
+} from "@common/sockets";
+import { useSocket } from "@hooks/useSocket";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
-  const socketRef = useRef();
+  const socket = useSocket();
   const { gameSongs, currentSongOptions, getSongOptions } =
     useCreateGame(tracks);
   const { data: session } = useSession();
@@ -34,7 +36,7 @@ export default function CreateGame({ playlist, tracks }) {
   const [usersList, setUsersList] = useState([]);
 
   useEffect(() => {
-    if (!session || socketRef.current) return;
+    if (!socket) return;
 
     const userJoin = (msg) => {
       setUsersList((prevUsers) => [
@@ -49,26 +51,23 @@ export default function CreateGame({ playlist, tracks }) {
       );
     };
 
-    (async () => {
-      await fetch(SERVER.SOCKET);
-      socketRef.current = io();
-      socketRef.current.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
-      socketRef.current.on(
-        SOCKET_CLIENT_MESSAGES.USER_DISCONNECT,
-        userDisconnect
-      );
-    })();
+    socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
+    socket.on(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, userDisconnect);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
-        socketRef.current.off(
-          SOCKET_CLIENT_MESSAGES.USER_DISCONNECT,
-          userDisconnect
-        );
-      }
+      socket.off(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
+      socket.off(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, userDisconnect);
     };
-  }, [session]);
+  }, [socket]);
+
+  useEffect(() => {
+    if (!session || !socket) return;
+
+    socket.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, {
+      id: session.user.id,
+      userName: session.user.name,
+    });
+  }, [session, socket]);
 
   const onBtnClick = () => {
     if (gameStatus === GAME_STATUS.NOT_STARTED) {

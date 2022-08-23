@@ -1,39 +1,34 @@
 import { useState, useRef, useEffect } from "react";
 import { Button, Container, Heading, Input } from "@chakra-ui/react";
 import { SOCKET_SERVER_MESSAGES } from "@common/sockets";
-import io from "socket.io-client";
-import { SERVER } from "@common/server";
+import { useSocket } from "@hooks/useSocket";
 
 export default function Game() {
-  const socketRef = useRef();
+  const socket = useSocket();
   const userInputRef = useRef();
   const [user, setUser] = useState();
 
   useEffect(() => {
+    if (!socket) return;
+
     const disconnectWebSocket = () => {
-      socketRef.current.disconnect(true);
+      socket.disconnect(true);
     };
 
-    (async () => {
-      await fetch(SERVER.SOCKET);
-      socketRef.current = io();
-
-      window.addEventListener("beforeunload", disconnectWebSocket);
-    })();
+    window.addEventListener("beforeunload", disconnectWebSocket);
 
     return () => {
       window.removeEventListener("beforeunload", disconnectWebSocket);
     };
-  }, []);
+  }, [socket]);
 
   const createUser = () => {
     const newUser = {
-      id: socketRef.current.id,
+      id: socket.id,
       userName: userInputRef.current.value,
     };
-    console.log("adding", newUser);
     setUser(newUser);
-    socketRef.current.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, newUser);
+    socket.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, newUser);
   };
 
   if (!user) {

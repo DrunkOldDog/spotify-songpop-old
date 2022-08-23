@@ -12,7 +12,7 @@ export default function SocketHandler(_, res) {
     console.log("Socket already running!");
     /* To refresh socket listeners on fast refresh */
     if (process.env.NODE_ENV === "development") {
-      res.socket.server.io.removeAllListeners();
+      res.socket.server.io.removeAllListeners("connection");
       res.socket.server.io.on("connection", messageHandler);
     }
   }
