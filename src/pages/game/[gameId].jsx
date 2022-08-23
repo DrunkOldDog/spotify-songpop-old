@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Button, Container, Heading, Input } from "@chakra-ui/react";
-import { v4 as uuid } from "uuid";
 import { SOCKET_SERVER_MESSAGES } from "@common/sockets";
 import io from "socket.io-client";
 import { SERVER } from "@common/server";
@@ -11,14 +10,28 @@ export default function Game() {
   const [user, setUser] = useState();
 
   useEffect(() => {
+    const disconnectWebSocket = () => {
+      socketRef.current.disconnect(true);
+    };
+
     (async () => {
       await fetch(SERVER.SOCKET);
       socketRef.current = io();
+
+      window.addEventListener("beforeunload", disconnectWebSocket);
     })();
+
+    return () => {
+      window.removeEventListener("beforeunload", disconnectWebSocket);
+    };
   }, []);
 
   const createUser = () => {
-    const newUser = { id: uuid(), userName: userInputRef.current.value };
+    const newUser = {
+      id: socketRef.current.id,
+      userName: userInputRef.current.value,
+    };
+    console.log("adding", newUser);
     setUser(newUser);
     socketRef.current.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, newUser);
   };
@@ -26,9 +39,11 @@ export default function Game() {
   if (!user) {
     return (
       <Container>
-        <Heading as="h2">Add a username to start </Heading>
-        <Input ref={userInputRef} />
-        <Button onClick={createUser}>Create User</Button>
+        <form onSubmit={createUser}>
+          <Heading as="h2">Add a username to start </Heading>
+          <Input ref={userInputRef} />
+          <Button type="submit">Create User</Button>
+        </form>
       </Container>
     );
   }

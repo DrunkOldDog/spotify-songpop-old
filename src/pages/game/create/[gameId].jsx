@@ -10,6 +10,8 @@ import {
   Heading,
   Image,
   Text,
+  Wrap,
+  WrapItem,
 } from "@chakra-ui/react";
 import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
@@ -32,7 +34,7 @@ export default function CreateGame({ playlist, tracks }) {
   const [usersList, setUsersList] = useState([]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || socketRef.current) return;
 
     const userJoin = (msg) => {
       setUsersList((prevUsers) => [
@@ -41,15 +43,29 @@ export default function CreateGame({ playlist, tracks }) {
       ]);
     };
 
+    const userDisconnect = (data) => {
+      setUsersList((prevUsers) =>
+        prevUsers.filter((user) => user.id !== data.id)
+      );
+    };
+
     (async () => {
       await fetch(SERVER.SOCKET);
       socketRef.current = io();
       socketRef.current.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
+      socketRef.current.on(
+        SOCKET_CLIENT_MESSAGES.USER_DISCONNECT,
+        userDisconnect
+      );
     })();
 
     return () => {
       if (socketRef.current) {
         socketRef.current.off(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
+        socketRef.current.off(
+          SOCKET_CLIENT_MESSAGES.USER_DISCONNECT,
+          userDisconnect
+        );
       }
     };
   }, [session]);
@@ -126,11 +142,19 @@ export default function CreateGame({ playlist, tracks }) {
         </Box>
 
         {gameStatus === GAME_STATUS.NOT_STARTED ? (
-          <>
+          <Wrap mb={6}>
             {usersList.map((user) => (
-              <Text key={user.id}>{user.userName}</Text>
+              <WrapItem
+                key={user.id}
+                background="rgba(255, 255, 255, 0.25)"
+                px={2}
+                py={1}
+                borderRadius={1000}
+              >
+                <Text fontWeight={"bold"}>{user.userName}</Text>
+              </WrapItem>
             ))}
-          </>
+          </Wrap>
         ) : (
           <Text>
             Score {score}/{SONGS_LIMIT}
