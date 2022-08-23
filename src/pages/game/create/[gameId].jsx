@@ -10,8 +10,6 @@ import {
   Heading,
   Image,
   Text,
-  Wrap,
-  WrapItem,
 } from "@chakra-ui/react";
 import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
@@ -22,13 +20,14 @@ import {
   SOCKET_SERVER_MESSAGES,
 } from "@common/sockets";
 import { useSocket } from "@hooks/useSocket";
+import { PlayersBadges } from "@components/PlayersBadges";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
   const socket = useSocket();
   const { gameSongs, currentSongOptions, getSongOptions } =
     useCreateGame(tracks);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [selectedSong, setSelectedSong] = useState(null);
@@ -38,36 +37,25 @@ export default function CreateGame({ playlist, tracks }) {
   useEffect(() => {
     if (!socket) return;
 
-    const userJoin = (msg) => {
-      setUsersList((prevUsers) => [
-        ...prevUsers,
-        { id: msg.id, userName: msg.userName, score: 0 },
-      ]);
+    const onUserRoomStatus = ({ playersList }) => {
+      setUsersList(playersList);
     };
 
-    const userDisconnect = (data) => {
-      setUsersList((prevUsers) =>
-        prevUsers.filter((user) => user.id !== data.id)
-      );
-    };
-
-    socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
-    socket.on(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, userDisconnect);
+    socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, onUserRoomStatus);
+    socket.on(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, onUserRoomStatus);
 
     return () => {
-      socket.off(SOCKET_CLIENT_MESSAGES.USER_JOIN, userJoin);
-      socket.off(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, userDisconnect);
+      socket.off(SOCKET_CLIENT_MESSAGES.USER_JOIN, onUserRoomStatus);
+      socket.off(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, onUserRoomStatus);
     };
   }, [socket]);
 
   useEffect(() => {
-    if (!session || !socket) return;
-
-    socket.emit(SOCKET_SERVER_MESSAGES.ADD_USER_TO_GAME, {
-      id: session.user.id,
-      userName: session.user.name,
+    if (status === "loading" || !socket) return;
+    socket.emit(SOCKET_SERVER_MESSAGES.NEW_GAME_CREATED, {
+      hostName: session.user.name,
     });
-  }, [session, socket]);
+  }, [status, socket]);
 
   const onBtnClick = () => {
     if (gameStatus === GAME_STATUS.NOT_STARTED) {
@@ -141,19 +129,7 @@ export default function CreateGame({ playlist, tracks }) {
         </Box>
 
         {gameStatus === GAME_STATUS.NOT_STARTED ? (
-          <Wrap mb={6}>
-            {usersList.map((user) => (
-              <WrapItem
-                key={user.id}
-                background="rgba(255, 255, 255, 0.25)"
-                px={2}
-                py={1}
-                borderRadius={1000}
-              >
-                <Text fontWeight={"bold"}>{user.userName}</Text>
-              </WrapItem>
-            ))}
-          </Wrap>
+          <PlayersBadges mb={6} playersList={usersList} />
         ) : (
           <Text>
             Score {score}/{SONGS_LIMIT}

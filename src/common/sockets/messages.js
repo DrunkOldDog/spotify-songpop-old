@@ -5,4 +5,5 @@ export const SOCKET_CLIENT_MESSAGES = {
 
 export const SOCKET_SERVER_MESSAGES = {
   ADD_USER_TO_GAME: "addUserToGame",
+  NEW_GAME_CREATED: "newGameCreated",
 };
