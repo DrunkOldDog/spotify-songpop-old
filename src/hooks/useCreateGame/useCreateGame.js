@@ -46,6 +46,7 @@ export const useCreateGame = (tracks) => {
 
     setRepeatedSongs(currentIds);
     setCurrentSongOptions(options);
+    return options;
   };
 
   return { gameSongs, currentSongOptions, getSongOptions };

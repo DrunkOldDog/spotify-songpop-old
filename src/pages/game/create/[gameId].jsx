@@ -60,11 +60,17 @@ export default function CreateGame({ playlist, tracks }) {
   const onBtnClick = () => {
     if (gameStatus === GAME_STATUS.NOT_STARTED) {
       setGameStatus(GAME_STATUS.STARTED);
+      socket.emit(SOCKET_SERVER_MESSAGES.GAME_STATUS_CHANGE, {
+        status: GAME_STATUS.STARTED,
+      });
     } else if (currentSongIndex < gameSongs.length - 1) {
       setCurrentSongIndex((prevSong) => prevSong + 1);
       setSelectedSong(null);
     } else {
       setGameStatus(GAME_STATUS.FINISHED);
+      socket.emit(SOCKET_SERVER_MESSAGES.GAME_STATUS_CHANGE, {
+        status: GAME_STATUS.FINISHED,
+      });
     }
   };
 
@@ -80,7 +86,11 @@ export default function CreateGame({ playlist, tracks }) {
       if (audioRef.current) audioRef.current.pause();
       audioRef.current = new Audio(gameSongs[currentSongIndex].preview_url);
       audioRef.current.play();
-      getSongOptions(gameSongs[currentSongIndex]);
+      const options = getSongOptions(gameSongs[currentSongIndex]);
+      socket.emit(SOCKET_SERVER_MESSAGES.GAME_STATUS_CHANGE, {
+        options,
+        currentSong: gameSongs[currentSongIndex],
+      });
     }
   }, [gameStatus, currentSongIndex]);
 

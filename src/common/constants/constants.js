@@ -3,3 +3,9 @@ export const GAME_STATUS = {
   STARTED: "STARTED",
   FINISHED: "FINISHED",
 };
+
+export const defaultGameStatusState = {
+  status: GAME_STATUS.NOT_STARTED,
+  options: [],
+  currentSong: undefined,
+};
