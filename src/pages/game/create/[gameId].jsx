@@ -41,6 +41,9 @@ export default function CreateGame({ playlist, tracks }) {
       setUsersList(playersList);
     };
 
+    socket.on(SOCKET_CLIENT_MESSAGES.GAME_DATA, ({ playersList }) => {
+      setUsersList(playersList);
+    });
     socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, onUserRoomStatus);
     socket.on(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, onUserRoomStatus);
 
@@ -68,15 +71,14 @@ export default function CreateGame({ playlist, tracks }) {
       setSelectedSong(null);
     } else {
       setGameStatus(GAME_STATUS.FINISHED);
-      socket.emit(SOCKET_SERVER_MESSAGES.GAME_STATUS_CHANGE, {
-        status: GAME_STATUS.FINISHED,
-      });
+      socket.emit(SOCKET_SERVER_MESSAGES.GAME_FINISHED);
     }
   };
 
   const onSongSelect = (song) => {
     if (song.id === gameSongs[currentSongIndex].id) {
       setScore((prevScore) => prevScore + 1);
+      socket.emit(SOCKET_SERVER_MESSAGES.PLAYER_SCORE_UPDATE, socket.id);
     }
     setSelectedSong(song);
   };
@@ -117,7 +119,7 @@ export default function CreateGame({ playlist, tracks }) {
           <Heading as="h4" fontSize={"lg"}>
             Game score:
           </Heading>
-          <ScoreList playersScore={[{ name: session.user.name, score }]} />
+          <ScoreList playersScore={usersList} />
         </Center>
       </Container>
     );

@@ -26,6 +26,11 @@ export default function Game() {
   const [playersList, setPlayersList] = useState([]);
   const [selectedSong, setSelectedSong] = useState();
 
+  const getGameData = ({ playersList, gameStatus }) => {
+    setGameStatus(gameStatus);
+    setPlayersList(playersList);
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -38,17 +43,12 @@ export default function Game() {
     };
 
     socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, onUserJoin);
+    socket.on(SOCKET_CLIENT_MESSAGES.GAME_DATA, getGameData);
     socket.on(SOCKET_CLIENT_MESSAGES.GAME_STATUS, (gameStatus) => {
       setGameStatus(gameStatus);
       setSelectedSong(undefined);
     });
-    socket.emit(
-      SOCKET_SERVER_MESSAGES.GET_GAME_DATA,
-      ({ playersList, gameStatus }) => {
-        setGameStatus(gameStatus);
-        setPlayersList(playersList);
-      }
-    );
+    socket.emit(SOCKET_SERVER_MESSAGES.GET_GAME_DATA, getGameData);
     window.addEventListener("beforeunload", disconnectWebSocket);
 
     return () => {
@@ -70,6 +70,7 @@ export default function Game() {
   const onSongSelect = (song) => {
     if (song.id === gameStatus.currentSong?.id) {
       setUser({ ...user, score: user.score + 1 });
+      socket.emit(SOCKET_SERVER_MESSAGES.PLAYER_SCORE_UPDATE, socket.id);
     }
     setSelectedSong(song);
   };
@@ -93,9 +94,7 @@ export default function Game() {
           <Heading as="h4" fontSize={"lg"}>
             Game score:
           </Heading>
-          <ScoreList
-            playersScore={[{ name: user.userName, score: user.score }]}
-          />
+          <ScoreList playersScore={playersList} />
         </Center>
       </Container>
     );

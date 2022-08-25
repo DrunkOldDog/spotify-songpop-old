@@ -3,6 +3,7 @@ export const SOCKET_CLIENT_MESSAGES = {
   USER_DISCONNECT: "userDisconnect",
   PLAYER_SCORE: "playerScore",
   GAME_STATUS: "gameStatus",
+  GAME_DATA: "gameData",
 };
 
 export const SOCKET_SERVER_MESSAGES = {
@@ -11,4 +12,5 @@ export const SOCKET_SERVER_MESSAGES = {
   GET_GAME_DATA: "getGameData",
   NEW_GAME_CREATED: "newGameCreated",
   PLAYER_SCORE_UPDATE: "playerScoreUpdate",
+  GAME_FINISHED: "gameFinished",
 };
