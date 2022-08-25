@@ -7,9 +7,11 @@ import {
   Button,
   Center,
   Container,
+  Flex,
   Heading,
   Image,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
 import { ScoreList } from "@components/ScoreList";
@@ -21,10 +23,13 @@ import {
 } from "@common/sockets";
 import { useSocket } from "@hooks/useSocket";
 import { PlayersBadges } from "@components/PlayersBadges";
+import { useRouter } from "next/router";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
+  const toast = useToast();
   const socket = useSocket();
+  const { query } = useRouter();
   const { gameSongs, currentSongOptions, getSongOptions } =
     useCreateGame(tracks);
   const { data: session, status } = useSession();
@@ -96,6 +101,17 @@ export default function CreateGame({ playlist, tracks }) {
     }
   }, [gameStatus, currentSongIndex]);
 
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(
+      `${process.env.NEXT_PUBLIC_HOSTNAME}/game/${query.gameId}`
+    );
+    toast({
+      title: "Invite link was copied to your clipboard!",
+      status: "success",
+      isClosable: true,
+    });
+  };
+
   if (!playlist || !tracks) {
     return <Text>Something went wrong. Please try again later.</Text>;
   }
@@ -156,9 +172,23 @@ export default function CreateGame({ playlist, tracks }) {
             onSongSelect={onSongSelect}
           />
         )}
-        <Button disabled={!gameSongs} onClick={onBtnClick} size="lg">
-          {gameStatus === GAME_STATUS.STARTED ? "Next" : "Start Game"}
-        </Button>
+
+        <Flex gap={2}>
+          <Button disabled={!gameSongs} onClick={onBtnClick} size="lg">
+            {gameStatus === GAME_STATUS.STARTED ? "Next" : "Start Game"}
+          </Button>
+          {gameStatus === GAME_STATUS.NOT_STARTED && (
+            <Button
+              size="lg"
+              variant={"outline"}
+              colorScheme="gray"
+              onClick={copyInviteLink}
+              _hover={{ color: "blackAlpha.900", background: "gray.50" }}
+            >
+              Copy Invite
+            </Button>
+          )}
+        </Flex>
       </Center>
     </Container>
   );
