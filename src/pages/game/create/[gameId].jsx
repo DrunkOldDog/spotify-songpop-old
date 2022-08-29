@@ -14,7 +14,6 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
-import { ScoreList } from "@components/ScoreList";
 import { SongOptions } from "@components/SongOptions";
 import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
 import {
@@ -25,6 +24,7 @@ import { useSocket } from "@hooks/useSocket";
 import { PlayersBadges } from "@components/PlayersBadges";
 import { useRouter } from "next/router";
 import { GameNavbar } from "@layout/Navbar/GameNavbar";
+import { ScoreList } from "@components/ScoreList";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
@@ -125,6 +125,7 @@ export default function CreateGame({ playlist, tracks }) {
             player={{ id: session.user.id, userName: session.user.name, score }}
           />
         )}
+
         <Center flexDir={"column"} height="100vh" px={12}>
           <Image
             src={playlist.images[0].url}
@@ -138,7 +139,7 @@ export default function CreateGame({ playlist, tracks }) {
             <Text>{playlist.description}</Text>
           </Box>
 
-          <Heading as="h4" fontSize={"lg"}>
+          <Heading alignSelf={"flex-start"} as="h4" pb={4} fontSize={24}>
             Game score:
           </Heading>
           <ScoreList playersScore={usersList} />

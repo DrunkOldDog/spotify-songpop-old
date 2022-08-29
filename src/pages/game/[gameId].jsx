@@ -93,7 +93,7 @@ export default function Game() {
       <Container background="blackAlpha.900" color="#fff" padding={0}>
         <GameNavbar player={user} />
         <Center flexDir={"column"} height="100vh" px={12}>
-          <Heading as="h4" fontSize={"lg"}>
+          <Heading alignSelf={"flex-start"} as="h4" pb={4} fontSize={24}>
             Game score:
           </Heading>
           <ScoreList playersScore={playersList} />
