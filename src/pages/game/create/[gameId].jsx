@@ -104,7 +104,11 @@ export default function CreateGame({ playlist, tracks }) {
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(
-      `${process.env.NEXT_PUBLIC_HOSTNAME}/game/${query.gameId}`
+      `${
+        process.env.NEXT_PUBLIC_HOSTNAME
+          ? process.env.NEXT_PUBLIC_HOSTNAME
+          : window.location.origin
+      }/game/${query.gameId}`
     );
     toast({
       title: "Invite link was copied to your clipboard!",
