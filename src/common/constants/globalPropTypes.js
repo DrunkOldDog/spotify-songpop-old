@@ -30,4 +30,9 @@ export const GlobalPropTypes = {
     }),
     artists: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string })),
   }),
+  player: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    userName: PropTypes.string.isRequired,
+    score: PropTypes.number.isRequired,
+  }),
 };

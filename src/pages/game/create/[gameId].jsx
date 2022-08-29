@@ -24,6 +24,7 @@ import {
 import { useSocket } from "@hooks/useSocket";
 import { PlayersBadges } from "@components/PlayersBadges";
 import { useRouter } from "next/router";
+import { GameNavbar } from "@layout/Navbar/GameNavbar";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
@@ -118,8 +119,13 @@ export default function CreateGame({ playlist, tracks }) {
 
   if (gameStatus === GAME_STATUS.FINISHED) {
     return (
-      <Container background="blackAlpha.900" color="#fff">
-        <Center flexDir={"column"} height="100vh">
+      <Container background="blackAlpha.900" color="#fff" padding={0}>
+        {session && (
+          <GameNavbar
+            player={{ id: session.user.id, userName: session.user.name, score }}
+          />
+        )}
+        <Center flexDir={"column"} height="100vh" px={12}>
           <Image
             src={playlist.images[0].url}
             height={[40, 48, 56, 56]}
@@ -142,7 +148,12 @@ export default function CreateGame({ playlist, tracks }) {
   }
 
   return (
-    <Container background="blackAlpha.900" color="#fff">
+    <Container background="blackAlpha.900" color="#fff" padding={0}>
+      {session && (
+        <GameNavbar
+          player={{ id: session.user.id, userName: session.user.name, score }}
+        />
+      )}
       <Center flexDir={"column"} height="100vh" px={12}>
         <Heading as="h1" mb={8}>
           Start a new game:

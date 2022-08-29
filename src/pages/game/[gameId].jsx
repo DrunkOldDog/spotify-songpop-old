@@ -17,6 +17,7 @@ import { defaultGameStatusState, GAME_STATUS } from "@common/constants";
 import { SongOptions } from "@components/SongOptions";
 import { SONGS_LIMIT } from "@hooks/useCreateGame";
 import { ScoreList } from "@components/ScoreList";
+import { GameNavbar } from "@layout/Navbar/GameNavbar";
 
 export default function Game() {
   const socket = useSocket();
@@ -89,7 +90,8 @@ export default function Game() {
 
   if (gameStatus.status === GAME_STATUS.FINISHED) {
     return (
-      <Container background="blackAlpha.900" color="#fff">
+      <Container background="blackAlpha.900" color="#fff" padding={0}>
+        <GameNavbar player={user} />
         <Center flexDir={"column"} height="100vh" px={12}>
           <Heading as="h4" fontSize={"lg"}>
             Game score:
@@ -101,7 +103,8 @@ export default function Game() {
   }
 
   return (
-    <Container background="blackAlpha.900" color="#fff">
+    <Container background="blackAlpha.900" color="#fff" padding={0}>
+      <GameNavbar player={user} />
       <Center flexDir={"column"} height="100vh" px={12}>
         {gameStatus.status === GAME_STATUS.NOT_STARTED && (
           <PlayersBadges playersList={playersList} />

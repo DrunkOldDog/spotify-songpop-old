@@ -10,38 +10,44 @@ export const Navbar = ({ user, signIn, signOut }) => {
   const { push } = useRouter();
 
   return (
-    <NavigationBar height={{ base: "54px", lg: "80px" }}>
-      <Container height={"100%"}>
-        <Flex
-          justifyContent={"space-between"}
-          alignItems="center"
-          height="100%"
+    <NavigationBar>
+      <Box cursor={"pointer"} onClick={() => push("/")}>
+        <Spotify fill="#fff" height={{ base: "26px", lg: "40px" }} />
+      </Box>
+      {!user ? (
+        <Button
+          size={{ base: "sm", lg: "md" }}
+          onClick={() => signIn("spotify")}
         >
-          <Box cursor={"pointer"} onClick={() => push("/")}>
-            <Spotify fill="#fff" height={{ base: "26px", lg: "40px" }} />
-          </Box>
-          {!user ? (
-            <Button
-              size={{ base: "sm", lg: "md" }}
-              onClick={() => signIn("spotify")}
-            >
-              Log In
-            </Button>
-          ) : (
-            <User user={user} onLogout={signOut} />
-          )}
-        </Flex>
-      </Container>
+          Log In
+        </Button>
+      ) : (
+        <User user={user} onLogout={signOut} />
+      )}
     </NavigationBar>
   );
 };
 
-const NavigationBar = styled(Box)`
+export const NavigationBar = ({ children, ...props }) => (
+  <StlyledBar height={{ base: "54px", lg: "80px" }} {...props}>
+    <Container height={"100%"}>
+      <Flex justifyContent={"space-between"} alignItems="center" height="100%">
+        {children}
+      </Flex>
+    </Container>
+  </StlyledBar>
+);
+
+const StlyledBar = styled(Box)`
   background-color: #000;
 `;
 
-NavigationBar.defaultProps = {
+StlyledBar.defaultProps = {
   as: "nav",
+};
+
+NavigationBar.propTypes = {
+  children: PropTypes.node,
 };
 
 Navbar.propTypes = {
