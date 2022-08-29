@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { GAME_STATUS, GlobalPropTypes } from "@common/constants";
 import { SongOptions } from "@components/SongOptions";
-import { SONGS_LIMIT, useCreateGame } from "@hooks/useCreateGame";
+import { useCreateGame } from "@hooks/useCreateGame";
 import {
   SOCKET_CLIENT_MESSAGES,
   SOCKET_SERVER_MESSAGES,
@@ -168,12 +168,8 @@ export default function CreateGame({ playlist, tracks }) {
           <Text>{playlist.description}</Text>
         </Box>
 
-        {gameStatus === GAME_STATUS.NOT_STARTED ? (
+        {gameStatus === GAME_STATUS.NOT_STARTED && (
           <PlayersBadges mb={6} playersList={usersList} />
-        ) : (
-          <Text>
-            Score {score}/{SONGS_LIMIT}
-          </Text>
         )}
 
         {gameStatus === GAME_STATUS.STARTED && (

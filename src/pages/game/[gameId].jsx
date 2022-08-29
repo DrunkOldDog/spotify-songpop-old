@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import {
+  Box,
   Button,
   Center,
   Container,
   Heading,
   Input,
-  Text,
 } from "@chakra-ui/react";
 import {
   SOCKET_CLIENT_MESSAGES,
@@ -15,7 +15,6 @@ import { useSocket } from "@hooks/useSocket";
 import { PlayersBadges } from "@components/PlayersBadges";
 import { defaultGameStatusState, GAME_STATUS } from "@common/constants";
 import { SongOptions } from "@components/SongOptions";
-import { SONGS_LIMIT } from "@hooks/useCreateGame";
 import { ScoreList } from "@components/ScoreList";
 import { GameNavbar } from "@layout/Navbar/GameNavbar";
 
@@ -80,9 +79,16 @@ export default function Game() {
     return (
       <Container>
         <form onSubmit={createUser}>
-          <Heading as="h2">Add a username to start </Heading>
-          <Input ref={userInputRef} />
-          <Button type="submit">Create User</Button>
+          <Center height={"100vh"} flexDir="column">
+            <Box mb={8}>
+              <Heading as="h2" size={"lg"} mb={2}>
+                Add your nick to start
+              </Heading>
+              <Input ref={userInputRef} placeholder="E.g. MalumaBaby96" />
+            </Box>
+
+            <Button type="submit">Create User</Button>
+          </Center>
         </form>
       </Container>
     );
@@ -92,12 +98,12 @@ export default function Game() {
     return (
       <Container background="blackAlpha.900" color="#fff" padding={0}>
         <GameNavbar player={user} />
-        <Center flexDir={"column"} height="100vh" px={12}>
+        <Container height={"100vh"} py={8}>
           <Heading alignSelf={"flex-start"} as="h4" pb={4} fontSize={24}>
             Game score:
           </Heading>
           <ScoreList playersScore={playersList} />
-        </Center>
+        </Container>
       </Container>
     );
   }
@@ -111,17 +117,12 @@ export default function Game() {
         )}
 
         {gameStatus.status === GAME_STATUS.STARTED && (
-          <>
-            <Text>
-              Score {user.score}/{SONGS_LIMIT}
-            </Text>
-            <SongOptions
-              songOptions={gameStatus.options}
-              currentSong={gameStatus.currentSong}
-              isSongSelected={!!selectedSong}
-              onSongSelect={onSongSelect}
-            />
-          </>
+          <SongOptions
+            songOptions={gameStatus.options}
+            currentSong={gameStatus.currentSong}
+            isSongSelected={!!selectedSong}
+            onSongSelect={onSongSelect}
+          />
         )}
       </Center>
     </Container>
