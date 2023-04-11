@@ -11,5 +11,6 @@ export const SERVER = {
 
   /* API Routes */
   SEARCH_PLAYLIST: "/api/playlists/search",
+  GAME: "/api/game",
   SOCKET: "/api/socket",
 };
