@@ -20,20 +20,22 @@ import {
   SOCKET_CLIENT_MESSAGES,
   SOCKET_SERVER_MESSAGES,
 } from "@common/sockets";
-import { useSocket } from "@hooks/useSocket";
 import { PlayersBadges } from "@components/PlayersBadges";
 import { useRouter } from "next/router";
 import { GameNavbar } from "@layout/Navbar/GameNavbar";
 import { ScoreList } from "@components/ScoreList";
+import { useSpecificSocket } from "@hooks/useSpecificSocket";
 
 export default function CreateGame({ playlist, tracks }) {
   const audioRef = useRef();
   const toast = useToast();
-  const socket = useSocket();
   const { query } = useRouter();
+  const socket = useSpecificSocket(query.gameId);
+  const { data: session, status } = useSession();
+
   const { gameSongs, currentSongOptions, getSongOptions } =
     useCreateGame(tracks);
-  const { data: session, status } = useSession();
+
   const [gameStatus, setGameStatus] = useState(GAME_STATUS.NOT_STARTED);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [selectedSong, setSelectedSong] = useState(null);
@@ -50,6 +52,7 @@ export default function CreateGame({ playlist, tracks }) {
     socket.on(SOCKET_CLIENT_MESSAGES.GAME_DATA, ({ playersList }) => {
       setUsersList(playersList);
     });
+
     socket.on(SOCKET_CLIENT_MESSAGES.USER_JOIN, onUserRoomStatus);
     socket.on(SOCKET_CLIENT_MESSAGES.USER_DISCONNECT, onUserRoomStatus);
 

@@ -4,7 +4,7 @@ import { SOCKET_SERVER_MESSAGES, SOCKET_CLIENT_MESSAGES } from "./messages";
 let playersList = []; // local state for users
 const gameStatus = { ...defaultGameStatusState };
 export const messageHandler = (socket) => {
-  const addUserToGame = (newUser) => {
+    const addUserToGame = (newUser) => {
     playersList.push({ id: socket.id, userName: newUser.userName, score: 0 });
     socket.broadcast.emit(SOCKET_CLIENT_MESSAGES.USER_JOIN, {
       newUser,
