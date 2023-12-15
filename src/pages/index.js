@@ -3,21 +3,26 @@ import { Navbar } from "@layout/Navbar";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRef } from "react";
 import { useRouter } from "next/router";
-import { v4 as uuid } from "uuid";
+import { postData, SERVER } from "@common/server";
 
 function Home() {
   const { data } = useSession();
   const { push } = useRouter();
   const playlistInputRef = useRef(null);
 
-  const goToGame = () => {
-    const gameId = uuid();
+  const goToGame = async () => {
     const regex = /playlist\/(\w+)/;
     const playlistId = regex.exec(playlistInputRef.current.value)[1];
     if (!playlistId) {
       return;
     }
-    push(`/game/create/${gameId}?playlistId=${playlistId}`);
+
+    const { data } = await postData(SERVER.GAME, { playlistId });
+    if (!data.gameId) {
+      return;
+    }
+
+    push(`/game/create/${data.gameId}?playlistId=${playlistId}`);
   };
 
   return (

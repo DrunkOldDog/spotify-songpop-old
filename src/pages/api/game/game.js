@@ -1,12 +1,17 @@
-import { createGame } from "@lib/redis";
-
-import { v4 as uuid } from "uuid";
+import { SERVER } from "@common/server";
+import { createGame, getGame } from "@lib/redis";
 
 export default async function handler(req, res) {
-  const gameId = await createGame({
-    playlistId: req.body.playlistId,
-    gameId: uuid(),
-  });
+  if (req.method === "POST") {
+    const gameId = await createGame({
+      playlistId: req.body.playlistId,
+    });
 
-  res.status(200).json({ gameId });
+    await fetch("http://localhost:3000" + SERVER.SOCKET + "/" + gameId);
+
+    res.status(200).json({ gameId });
+  } else {
+    const game = await getGame({ gameId: req.query.gameId });
+    res.status(200).json(game);
+  }
 }

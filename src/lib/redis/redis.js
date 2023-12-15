@@ -12,22 +12,29 @@ async function connect() {
   }
 }
 
-export const createGame = async ({ gameId, playlistId }) => {
+export const createGame = async ({ playlistId }) => {
   await connect();
 
   const repository = client.fetchRepository(gameSchema);
 
   const game = repository.createEntity({
-    gameId,
     playlistId,
     status: GAME_STATUS.NOT_STARTED,
     players: JSON.stringify({}),
   });
 
-  const id = await repository.save(game);
+  const gameId = await repository.save(game);
 
   /* Add TTL to Game Store */
-  await client.execute(["EXPIRE", `Game:${id}`, 3600]);
+  await client.execute(["EXPIRE", `Game:${gameId}`, 3600]);
 
-  return id;
+  return gameId;
 };
+
+export const getGame = async ({ gameId }) => {
+  await connect();
+
+  const repository = client.fetchRepository(gameSchema);
+
+  return await repository.fetch(gameId);
+}
